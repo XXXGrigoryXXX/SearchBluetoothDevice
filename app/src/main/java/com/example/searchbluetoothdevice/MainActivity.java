@@ -8,15 +8,12 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -37,7 +34,6 @@ public class MainActivity extends AppCompatActivity implements
         AdapterView.OnItemClickListener,
         View.OnClickListener {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
     private static final int REQUEST_CODE_LOC = 1;
 
     private static final int REQ_ENABLE_BT = 10;
@@ -85,7 +81,6 @@ public class MainActivity extends AppCompatActivity implements
 
         if (bluetoothAdapter == null) {
             Toast.makeText(this, R.string.bluetooth_not_supported, Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "onCreate: " + getString(R.string.bluetooth_not_supported));
             finish();
         }
 
@@ -186,8 +181,10 @@ public class MainActivity extends AppCompatActivity implements
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void enableSearch() {
         if (bluetoothAdapter.isDiscovering()) {
+            bluetoothDevices.clear();
             bluetoothAdapter.cancelDiscovery();
         } else {
+            bluetoothDevices.clear();
             accessLocationPermission();
             bluetoothAdapter.startDiscovery();
         }
@@ -206,6 +203,7 @@ public class MainActivity extends AppCompatActivity implements
                 case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
                     btnEnableSearch.setText(R.string.start_search);
                     pbProgress.setVisibility(View.GONE);
+                    bluetoothAdapter.startDiscovery();
                     break;
                 case BluetoothDevice.ACTION_FOUND:
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -236,23 +234,6 @@ public class MainActivity extends AppCompatActivity implements
         if (!listRequestPermission.isEmpty()) {
             String[] strRequestPermission = listRequestPermission.toArray(new String[listRequestPermission.size()]);
             this.requestPermissions(strRequestPermission, REQUEST_CODE_LOC);
-        }
-    }
-
-    private void onRequestPermissionResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_CODE_LOC:
-
-                if (grantResults.length > 0) {
-                    for (int gr : grantResults) {
-                        if (gr != PackageManager.PERMISSION_GRANTED) {
-                            return;
-                        }
-                    }
-                }
-                break;
-            default:
-                break;
         }
     }
 
